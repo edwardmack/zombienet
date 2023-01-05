@@ -253,20 +253,20 @@ export async function genCmd(
   if (!command) command = DEFAULT_COMMAND;
 
   args = [...args];
-  args.push("--no-mdns");
+  // args.push("--no-mdns");
 
   if (key) args.push(...["--node-key", key]);
 
   if (!telemetry) args.push("--no-telemetry");
   else args.push(...["--telemetry-url", telemetryUrl]);
 
-  if (prometheus && !args.includes("--prometheus-external"))
-    args.push("--prometheus-external");
+  // if (prometheus && !args.includes("--prometheus-external"))
+  //   args.push("--prometheus-external");
 
   if (jaegerUrl && zombieRole === "node")
     args.push(...["--jaeger-agent", jaegerUrl]);
 
-  if (validator && !args.includes("--validator")) args.push("--validator");
+  if (validator && !args.includes("--validator")) args.push(...["--roles", "4"]);
 
   if (zombieRole === "collator" && parachainId) {
     const parachainIdArgIndex = args.findIndex((arg) =>
@@ -281,33 +281,40 @@ export async function genCmd(
 
   // port flags logic
   const portFlags = {
-    "--prometheus-port": nodeSetup.prometheusPort,
-    "--rpc-port": nodeSetup.rpcPort,
-    "--ws-port": nodeSetup.wsPort,
+    // "--prometheus-port": nodeSetup.prometheusPort,
+    "--rpcport": nodeSetup.rpcPort,
+    "--wsport": nodeSetup.wsPort,
   };
 
   for (const [k, v] of Object.entries(portFlags)) {
     args.push(...[k, v.toString()]);
   }
-  args.push(...["--listen-addr", `/ip4/0.0.0.0/tcp/${nodeSetup.p2pPort}/ws`]);
+  // args.push(...["--listen-addr", `/ip4/0.0.0.0/tcp/${nodeSetup.p2pPort}/ws`]);
+  args.push(...["--port", `${nodeSetup.p2pPort}`]);
+  args.push(...["--metrics-address", `:${nodeSetup.prometheusPort}`]);
 
   // set our base path
   const basePathFlagIndex = args.findIndex((arg) => arg === "--base-path");
   if (basePathFlagIndex >= 0) args.splice(basePathFlagIndex, 2);
-  args.push(...["--base-path", dataPath]);
+  args.push(...["--basepath", dataPath]);
 
   const finalArgs: string[] = [
     command,
-    "--chain",
+    // "--chain",
+    "--genesis",
     `${cfgPath}/${chain}.json`,
     "--name",
     name,
-    "--rpc-cors",
-    "all",
-    "--unsafe-rpc-external",
-    "--rpc-methods",
-    "unsafe",
-    "--unsafe-ws-external",
+    "--rpc",
+    "",
+    "--ws",
+    "",
+    "--ws-external",
+    "",
+    "--rpc-external",
+    "",
+    "--publish-metrics",
+    "",
     ...args,
   ];
 
