@@ -1,0 +1,21 @@
+[relaychain]
+default_image = "docker.io/paritypr/polkadot-debug:master"
+default_command = "~/projects/ChainSafe/gossamer/bin/gossamer"
+chain_spec_path = "chain/westend-local/westend-local-spec-raw.json"
+
+#chain = "rococo-local"
+
+  [[relaychain.nodes]]
+  name = "alice"
+  validator = true
+  args = ["--config", "./chain/westend-local/config-alice.toml","--key alice"]
+
+  [[relaychain.nodes]]
+  name = "bob"
+  validator = true
+  args = ["--config", "./chain/westend-local/config-bob.toml","--key bob"]
+
+[[relaychain.nodes]]
+  name = "charlie"
+  validator = true
+  args = ["--config", "./chain/westend-local/config-charlie.toml","--key charlie"]
