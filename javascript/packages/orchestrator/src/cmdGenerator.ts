@@ -251,8 +251,9 @@ export async function genCmd(
   }
 
   if (!command) command = DEFAULT_COMMAND;
-
+console.log("command " + command.includes("gossamer"))
   args = [...args];
+
   // args.push("--no-mdns");
 
   if (key) args.push(...["--node-key", key]);
@@ -260,13 +261,8 @@ export async function genCmd(
   if (!telemetry) args.push("--no-telemetry");
   else args.push(...["--telemetry-url", telemetryUrl]);
 
-  // if (prometheus && !args.includes("--prometheus-external"))
-  //   args.push("--prometheus-external");
-
   if (jaegerUrl && zombieRole === "node")
     args.push(...["--jaeger-agent", jaegerUrl]);
-
-  if (validator && !args.includes("--validator")) args.push(...["--roles", "4"]);
 
   if (zombieRole === "collator" && parachainId) {
     const parachainIdArgIndex = args.findIndex((arg) =>
@@ -279,44 +275,95 @@ export async function genCmd(
   if (bootnodes && bootnodes.length)
     args.push("--bootnodes", bootnodes.join(" "));
 
-  // port flags logic
-  const portFlags = {
-    // "--prometheus-port": nodeSetup.prometheusPort,
-    "--rpcport": nodeSetup.rpcPort,
-    "--wsport": nodeSetup.wsPort,
-  };
-
-  for (const [k, v] of Object.entries(portFlags)) {
-    args.push(...[k, v.toString()]);
-  }
-  // args.push(...["--listen-addr", `/ip4/0.0.0.0/tcp/${nodeSetup.p2pPort}/ws`]);
-  args.push(...["--port", `${nodeSetup.p2pPort}`]);
-  args.push(...["--metrics-address", `:${nodeSetup.prometheusPort}`]);
-
   // set our base path
   const basePathFlagIndex = args.findIndex((arg) => arg === "--base-path");
   if (basePathFlagIndex >= 0) args.splice(basePathFlagIndex, 2);
-  args.push(...["--basepath", dataPath]);
+  args.push(...["--base-path", dataPath]);
 
-  const finalArgs: string[] = [
-    command,
-    // "--chain",
-    "--genesis",
-    `${cfgPath}/${chain}.json`,
-    "--name",
-    name,
-    "--rpc",
-    "",
-    "--ws",
-    "",
-    "--ws-external",
-    "",
-    "--rpc-external",
-    "",
-    "--publish-metrics",
-    "",
-    ...args,
-  ];
+  let portFlags
+  let finalArgs: string[]
+  if (command.includes("gossamer")) {
+    portFlags = {
+      "--rpc-port": nodeSetup.rpcPort,
+      "--ws-port": nodeSetup.wsPort,
+    };
+    for (const [k, v] of Object.entries(portFlags)) {
+      args.push(...[k, v.toString()]);
+    }
+    if (validator && !args.includes("--validator")) args.push(...["--roles", "4"]);
+    args.push(...["--port", `${nodeSetup.p2pPort}`]);
+    args.push(...["--metrics-address", `:${nodeSetup.prometheusPort}`]);
+    finalArgs = [
+      command,
+      "--genesis",
+      `${cfgPath}/${chain}.json`,
+      "--name",
+      name,
+      "--rpc",
+      "",
+      "--ws",
+      "",
+      "--ws-external",
+      "",
+      "--rpc-external",
+      "",
+      "--publish-metrics",
+      "",
+      ...args,
+    ];
+    
+  } else {
+    if (prometheus && !args.includes("--prometheus-external"))
+      args.push("--prometheus-external");
+    
+    portFlags = {
+      "--prometheus-port": nodeSetup.prometheusPort,
+      "--rpc-port": nodeSetup.rpcPort,
+      "--ws-port": nodeSetup.wsPort,
+    };
+    for (const [k, v] of Object.entries(portFlags)) {
+      args.push(...[k, v.toString()]);
+    }
+    if (validator && !args.includes("--validator")) args.push("--validator");
+    args.push(...["--listen-addr", `/ip4/0.0.0.0/tcp/${nodeSetup.p2pPort}/ws`]);
+    finalArgs = [
+      command,
+      "--chain",
+      `${cfgPath}/${chain}.json`,
+      "--name",
+      name,
+      "--rpc-cors",
+      "all",
+      "--unsafe-rpc-external",
+      "--rpc-methods",
+      "unsafe",
+      "--unsafe-ws-external",
+      ...args,
+    ];
+    
+  }
+
+  
+
+  // const finalArgs: string[] = [
+  //   command,
+  //   // "--chain",
+  //   "--genesis",
+  //   `${cfgPath}/${chain}.json`,
+  //   "--name",
+  //   name,
+  //   "--rpc",
+  //   "",
+  //   "--ws",
+  //   "",
+  //   "--ws-external",
+  //   "",
+  //   "--rpc-external",
+  //   "",
+  //   "--publish-metrics",
+  //   "",
+  //   ...args,
+  // ];
 
   const resolvedCmd = [finalArgs.join(" ")];
   if (useWrapper) resolvedCmd.unshift("/cfg/zombie-wrapper.sh");
