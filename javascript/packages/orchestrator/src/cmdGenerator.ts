@@ -284,8 +284,8 @@ console.log("command " + command.includes("gossamer"))
   let finalArgs: string[]
   if (command.includes("gossamer")) {
     portFlags = {
-      "--rpc-port": nodeSetup.rpcPort,
-      "--ws-port": nodeSetup.wsPort,
+      "--rpcport": nodeSetup.rpcPort,
+      "--wsport": nodeSetup.wsPort,
     };
     for (const [k, v] of Object.entries(portFlags)) {
       args.push(...[k, v.toString()]);
