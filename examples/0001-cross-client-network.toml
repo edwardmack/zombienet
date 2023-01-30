@@ -1,8 +1,7 @@
 [relaychain]
 default_image = "docker.io/paritypr/polkadot-debug:master"
-#default_command = "polkadot"
-#default_args = [ "-lparachain=debug" ]
 chain_spec_path = "chain/westend-local/westend-local-spec-raw.json"
+#chain_spec_path = "chain/3-auth-node-v0.9.10/genesis-raw.json"
 
 chain = "rococo-local"
 
@@ -10,7 +9,7 @@ chain = "rococo-local"
   name = "alice"
   command = "~/projects/ChainSafe/gossamer/bin/gossamer"
   validator = true
-  args = ["--config", "./chain/westend-local/config-alice.toml", "--key alice", "--babe-lead", "--rpcmods", "system,author,chain,state,rpc,grandpa,offchain,childstate,syncstate,payment"]
+  args = ["--config", "./chain/westend-local/config-alice-min.toml", "--key alice", "--babe-lead", "--rpcmods", "system,author,chain,state,rpc,grandpa,offchain,childstate,syncstate,payment"]
 
   [[relaychain.nodes]]
   name = "bob"
@@ -21,4 +20,4 @@ chain = "rococo-local"
   name = "charlie"
   command = "~/projects/ChainSafe/gossamer/bin/gossamer"
   validator = true
-  args = ["--config", "./chain/westend-local/config-charlie.toml","--key charlie", "--rpcmods", "system,author,chain,state,rpc,grandpa,offchain,childstate,syncstate,payment"]
+  args = ["--config", "./chain/westend-local/config-charlie-min.toml","--key charlie", "--rpcmods", "system,author,chain,state,rpc,grandpa,offchain,childstate,syncstate,payment"]
