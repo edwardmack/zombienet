@@ -7,17 +7,17 @@ chain = "rococo-local"
 
   [[relaychain.nodes]]
   name = "alice"
-  command = "~/projects/ChainSafe/gossamer/bin/gossamer"
-  validator = true
-  args = ["--config", "./chain/westend-local/config-alice-min.toml", "--key alice", "--babe-lead", "--rpcmods", "system,author,chain,state,rpc,grandpa,offchain,childstate,syncstate,payment"]
-
-  [[relaychain.nodes]]
-  name = "bob"
   command = "polkadot"
   validator = true
 
   [[relaychain.nodes]]
-  name = "charlie"
+  name = "bob"
   command = "~/projects/ChainSafe/gossamer/bin/gossamer"
   validator = true
-  args = ["--config", "./chain/westend-local/config-charlie-min.toml","--key charlie", "--rpcmods", "system,author,chain,state,rpc,grandpa,offchain,childstate,syncstate,payment"]
+  args = ["--config", "./chain/westend-local/config-bob-min.toml", "--key bob", "--rpcmods", "system,author,chain,state,rpc,grandpa,offchain,childstate,syncstate,payment"]
+
+  #[[relaychain.nodes]]
+  #name = "charlie"
+  #command = "~/projects/ChainSafe/gossamer/bin/gossamer"
+  #validator = true
+  #args = ["--config", "./chain/westend-local/config-charlie-min.toml","--key charlie", "--rpcmods", "system,#author,chain,state,rpc,grandpa,offchain,childstate,syncstate,payment"]

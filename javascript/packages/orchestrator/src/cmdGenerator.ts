@@ -325,7 +325,7 @@ console.log("command " + command.includes("gossamer"))
       args.push(...[k, v.toString()]);
     }
     if (validator && !args.includes("--validator")) args.push("--validator");
-    //args.push(...["--listen-addr", `/ip4/0.0.0.0/tcp/${nodeSetup.p2pPort}/ws`]);
+    args.push(...["--listen-addr", `/ip4/0.0.0.0/tcp/${nodeSetup.p2pPort}/ws`]);
     finalArgs = [
       command,
       "--chain",
