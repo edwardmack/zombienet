@@ -249,18 +249,15 @@ export async function genCmd(
   args = [...args];
   args.push("--no-mdns");
 
+  args.push(...["--name", name]);
+
   if (key) args.push(...["--node-key", key]);
 
   if (!telemetry) args.push("--no-telemetry");
   else args.push(...["--telemetry-url", telemetryUrl]);
 
-  if (prometheus && !args.includes("--prometheus-external"))
-    args.push("--prometheus-external");
-
   if (jaegerUrl && zombieRole === "node")
     args.push(...["--jaeger-agent", jaegerUrl]);
-
-  if (validator && !args.includes("--validator")) args.push("--validator");
 
   if (zombieRole === "collator" && parachainId) {
     const parachainIdArgIndex = args.findIndex((arg) =>
@@ -273,47 +270,83 @@ export async function genCmd(
   if (bootnodes && bootnodes.length)
     args.push("--bootnodes", bootnodes.join(" "));
 
-  // port flags logic
-  const portFlags = {
-    "--prometheus-port": nodeSetup.prometheusPort,
-    "--rpc-port": nodeSetup.rpcPort,
-    "--ws-port": nodeSetup.wsPort,
-  };
-
-  for (const [k, v] of Object.entries(portFlags)) {
-    args.push(...[k, v.toString()]);
-  }
-
-  const listenIndex = args.findIndex((arg) => arg === "--listen-addr");
-  if (listenIndex >= 0) {
-    let listenAddrParts = args[listenIndex + 1].split("/");
-    listenAddrParts[listenAddrParts.length - 2] = `${nodeSetup.p2pPort}`;
-    const listenAddr = listenAddrParts.join("/");
-    args[listenIndex + 1] = listenAddr;
-  } else {
-    // no --listen-add args
-    args.push(...[`--listen-addr /ip4/0.0.0.0/tcp/${nodeSetup.p2pPort}/ws`]);
-  }
-
   // set our base path
   const basePathFlagIndex = args.findIndex((arg) => arg === "--base-path");
   if (basePathFlagIndex >= 0) args.splice(basePathFlagIndex, 2);
   args.push(...["--base-path", dataPath]);
 
-  const finalArgs: string[] = [
-    command,
-    "--chain",
-    `${cfgPath}/${chain}.json`,
-    "--name",
-    name,
-    "--rpc-cors",
-    "all",
-    "--unsafe-rpc-external",
-    "--rpc-methods",
-    "unsafe",
-    "--unsafe-ws-external",
-    ...args,
-  ];
+  let portFlags = new Map<string, number>([
+      ["--rpc-port", nodeSetup.rpcPort],
+      ["--ws-port", nodeSetup.wsPort]
+    ]);
+ 
+  let finalArgs: string[];
+ 
+  if (command.includes("gossamer")) {
+    portFlags.set("--port", nodeSetup.p2pPort);
+    
+    for (const [k, v] of portFlags) {
+      args.push(...[k, v.toString()]);
+    }
+    
+    if (validator && !args.includes("--validator")) args.push(...["--roles", "4"]);
+    
+    args.push(...["--metrics-address", `:${nodeSetup.prometheusPort}`]);
+
+    finalArgs = [
+      command,
+      "--genesis",
+      `${cfgPath}/${chain}.json`,
+      "--rpc",
+      "",
+      "--ws",
+      "",
+      "--ws-external",
+      "",
+      "--rpc-external",
+      "",
+      "--publish-metrics",
+      "",
+      "--rpcmods",
+      "system,author,chain,state,rpc,grandpa,offchain,childstate,syncstate,payment",
+      ...args,
+    ];
+    
+  } else {
+    if (prometheus && !args.includes("--prometheus-external"))
+      args.push("--prometheus-external");
+    
+    portFlags.set("--prometheus-port", nodeSetup.prometheusPort);
+    for (const [k, v] of portFlags) {
+      args.push(...[k, v.toString()]);
+    }
+    if (validator && !args.includes("--validator")) args.push("--validator");
+
+    const listenIndex = args.findIndex((arg) => arg === "--listen-addr");
+    if (listenIndex >= 0) {
+      let listenAddrParts = args[listenIndex + 1].split("/");
+      listenAddrParts[listenAddrParts.length - 2] = `${nodeSetup.p2pPort}`;
+      const listenAddr = listenAddrParts.join("/");
+      args[listenIndex + 1] = listenAddr;
+    } else {
+      // no --listen-add args
+      args.push(...[`--listen-addr /ip4/0.0.0.0/tcp/${nodeSetup.p2pPort}/ws`]);
+    }
+
+    finalArgs = [
+      command,
+      "--chain",
+      `${cfgPath}/${chain}.json`,
+      "--rpc-cors",
+      "all",
+      "--unsafe-rpc-external",
+      "--rpc-methods",
+      "unsafe",
+      "--unsafe-ws-external",
+      ...args,
+    ];
+    
+  }
 
   const resolvedCmd = [finalArgs.join(" ")];
   if (useWrapper) resolvedCmd.unshift("/cfg/zombie-wrapper.sh");
