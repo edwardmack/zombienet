@@ -288,13 +288,12 @@ export async function genCmd(
 
   let portFlags = new Map<string, number>([
       ["--rpc-port", nodeSetup.rpcPort],
-      ["--ws-port", nodeSetup.wsPort]
+      ["--ws-port", nodeSetup.wsPort],
     ]);
  
   let finalArgs: string[];
  
   if (command.includes("gossamer")) {
-    portFlags.set("--port", nodeSetup.p2pPort);
     
     for (const [k, v] of portFlags) {
       args.push(...[k, v.toString()]);
